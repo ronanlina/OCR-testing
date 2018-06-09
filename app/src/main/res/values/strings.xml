@@ -1,0 +1,6 @@
+<resources>
+    <string name="app_name">Text Recog Test</string>
+    <string name="StartButton">Start</string>
+    <string name="low_storage_error">Device storage is low!</string>
+    <string name="AppTitle">Edit name laterr. whatevs</string>
+</resources>

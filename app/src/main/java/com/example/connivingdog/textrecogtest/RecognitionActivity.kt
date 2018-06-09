@@ -15,16 +15,35 @@ import android.util.Log
 import android.view.SurfaceHolder
 import com.example.connivingdog.textrecogtest.R.id.camera_view
 import com.google.android.gms.vision.CameraSource
+import com.google.android.gms.vision.Detector
+import com.google.android.gms.vision.text.TextBlock
 import kotlinx.android.synthetic.main.activity_recognition.*
 import java.io.IOException
 import java.util.jar.Manifest
+import android.graphics.RectF
+import android.speech.tts.TextToSpeech
+import java.util.*
 
+    private var tts: TextToSpeech? = null
 
 class RecognitionActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recognition)
+
+
+        // Text To Speech engine start.
+        val listener = TextToSpeech.OnInitListener { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                Log.d("TTS", "Text to speech engine started successfully.")
+                tts?.setLanguage(Locale.US)
+            } else {
+                Log.d("TTS", "Error starting the text to speech engine.")
+            }
+        }
+        tts = TextToSpeech(applicationContext, listener)
+        // Text To Speech engine end.
 
         //camera preview setup start
 
@@ -63,7 +82,49 @@ class RecognitionActivity : AppCompatActivity() {
                 }
             })
 
-            //camera preview setup start
+            //camera preview setup end
+
+            //detector processor start
+
+            textRecognizer.setProcessor(object : Detector.Processor<TextBlock>{
+                override fun release() {
+
+                }
+
+                override fun receiveDetections(detections: Detector.Detections<TextBlock>?) {
+                    val items = detections!!.detectedItems
+
+                    if(items.size() <= 0){
+                        return
+                    }
+
+                    captured_text.post {
+                        val stringBuilder = StringBuilder()
+
+                        for(i in 0 until items.size()){
+                            val item = items.valueAt(i)
+                            stringBuilder.append(item.value)
+                            stringBuilder.append("\n")
+                        }
+
+                        captured_text.text = stringBuilder.toString()
+            //detector processor end
+
+            //text to speech application start
+
+                        captured_text.setOnClickListener {
+                            if(captured_text.text != null){
+                                tts!!.speak(captured_text.text, TextToSpeech.QUEUE_ADD, null, "DEFAULT")
+                            }
+                        }
+
+            //text to speech application end
+
+                    }
+
+                }
+
+            })
         }
     }
 
@@ -75,4 +136,5 @@ class RecognitionActivity : AppCompatActivity() {
     private fun requestForPermission() {
         ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.CAMERA), PackageManager.PERMISSION_GRANTED)
     }
+
 }
